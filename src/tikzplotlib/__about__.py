@@ -1,1 +1,7 @@
-__version__ = "0.10.1"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("tikzplotlib")
+except PackageNotFoundError:
+    # package is not installed
+    __version__ = "0.0.0"

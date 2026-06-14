@@ -1,4 +1,4 @@
-version := `python3 -c "from src.tikzplotlib.__about__ import __version__; print(__version__)"`
+version := `uv version --short`
 
 default:
 	@echo "\"just publish\"?"
@@ -6,17 +6,22 @@ default:
 publish:
 	@if [ "$(git rev-parse --abbrev-ref HEAD)" != "main" ]; then exit 1; fi
 	gh release create "v{{version}}"
-	flit publish
+	rm -rf dist/
+	uv build
+	uv publish
 
 clean:
 	@find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 	@rm -rf src/*.egg-info/ build/ dist/ .tox/ ./doc/_build/
 
 format:
-	isort .
-	black .
-	blacken-docs README.md
+	uv run --group lint isort .
+	uv run --group lint black .
+	uv run --group lint blacken-docs README.md
 
 lint:
-	black --check .
-	flake8 .
+	uv run --group lint black --check .
+	uv run --group lint flake8 .
+
+test *args:
+	uv run pytest {{args}} --codeblocks

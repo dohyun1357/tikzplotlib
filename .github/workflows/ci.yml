@@ -13,28 +13,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
       - name: Run pre-commit
-        uses: pre-commit/action@v2.0.3
+        uses: pre-commit/action@v3.0.1
 
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/checkout@v2
       # - name: Install system dependencies
       #   run: sudo apt-get install -y texlive-latex-base texlive-latex-extra context python3-tk
-      - name: Test with tox
-        run: |
-          pip install tox
-          tox -- --cov tikzplotlib --cov-report xml --cov-report term
-      - uses: codecov/codecov-action@v1
-        if: ${{ matrix.python-version == '3.10' && matrix.os == 'ubuntu-latest' }}
+      - name: Run tests
+        run: uv run --frozen pytest --codeblocks --cov tikzplotlib --cov-report xml --cov-report term
+      - uses: codecov/codecov-action@v4
+        if: ${{ matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest' }}

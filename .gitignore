@@ -10,5 +10,6 @@ build/
 *.egg-info/
 .pytest_cache/
 .tox/
+.venv/
 mytikz.tex
 test.tex

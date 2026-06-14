@@ -16,22 +16,25 @@ import pathlib
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-from configparser import ConfigParser
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 # Sphinx 1.* compat (for readthedocs)
 master_doc = "index"
 
-p = ConfigParser()
 this_dir = pathlib.Path(__file__).resolve().parent
-p.read(this_dir / ".." / "setup.cfg")
+with open(this_dir / ".." / "pyproject.toml", "rb") as f:
+    p = tomllib.load(f)["project"]
 
 # -- Project information -----------------------------------------------------
-project = p["metadata"]["name"]
+project = p["name"]
 year = datetime.datetime.utcnow().year
-author = p["metadata"]["author"]
+author = p["authors"][0]["name"]
 copyright = f"2010-{year}, {author}"
 
-release = p["metadata"]["version"]
+release = p["version"]
 
 
 # -- General configuration ---------------------------------------------------
