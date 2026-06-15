@@ -34,9 +34,9 @@ dependencies = [
 ]
 
 [project.urls]
-Code = "https://github.com/nschloe/tikzplotlib"
-Issues = "https://github.com/nschloe/tikzplotlib/issues"
-Funding = "https://github.com/sponsors/nschloe"
+Repository = "https://github.com/dohyun1357/tikzplotlib"
+Issues = "https://github.com/dohyun1357/tikzplotlib/issues"
+Documentation = "https://tikzplotlib.readthedocs.io/"
 
 [dependency-groups]
 dev = [
@@ -48,6 +48,10 @@ dev = [
 ]
 lint = [
   "ruff",
+]
+docs = [
+  "sphinx",
+  "furo",
 ]
 
 [tool.ruff]

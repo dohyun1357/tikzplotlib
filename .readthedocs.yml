@@ -1,9 +1,9 @@
 version: 2
-sphinx:
-  configuration: doc/conf.py
 
-
-python:
-  install:
-    - method: pip
-      path: .
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.13"
+  commands:
+    - pip install uv
+    - uv run --group docs sphinx-build -b html doc $READTHEDOCS_OUTPUT/html
