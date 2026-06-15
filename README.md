@@ -60,17 +60,6 @@ import tikzplotlib
 tikzplotlib.save("test.tex")
 ```
 
-<!--close the figure and reset defaults
-<!--pytest-codeblocks:cont-->
-
-```python
-import matplotlib as mpl
-
-plt.close()
-mpl.rcParams.update(mpl.rcParamsDefault)
-```
-
--->
 (see above) gives
 
 ```latex
