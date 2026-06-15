@@ -6,4 +6,4 @@ build:
     python: "3.13"
   commands:
     - pip install uv
-    - uv run --group docs sphinx-build -b html doc $READTHEDOCS_OUTPUT/html
+    - uv run --group docs sphinx-build -W --keep-going -b html doc $READTHEDOCS_OUTPUT/html
