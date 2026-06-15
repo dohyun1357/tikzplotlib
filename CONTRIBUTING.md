@@ -34,9 +34,9 @@ matplotlib internals (`obj._something`) directly from the rest of the code.
 ## The golden reference tests
 
 Most tests compare generated TikZ output byte-for-byte against the
-`tests/*_reference.tex` files. Those references correspond to the matplotlib
-version pinned in `uv.lock`, so CI is reproducible and the references only change
-deliberately.
+`tests/*_reference.tex` files. Those references correspond to the Python 3.12
+dependency resolution pinned in `uv.lock`. CI runs these golden tests only in
+that canonical environment, so the references change only deliberately.
 
 When you intentionally change the output (or bump matplotlib):
 
@@ -58,8 +58,12 @@ number of points removed by `clean_figure`, not absolute line counts).
 
 ## CI
 
-- The **build** matrix runs the full suite against the locked dependencies on
-  Python 3.9–3.13 across Linux/macOS/Windows.
+- The **golden** job runs the full suite, including byte-for-byte reference
+  comparisons, against the canonical locked Python 3.12 environment on Linux.
+- The **compatibility** matrix runs output-agnostic README, `clean_figure`,
+  focused Matplotlib compatibility, deterministic-output, and rotated-label
+  tests against the locked dependencies on Python 3.9–3.13 across
+  Linux/macOS/Windows.
 - The **smoke-latest** job (also weekly via cron) runs the output-agnostic
   README examples against the newest matplotlib/numpy to catch upstream API
   breakage early, separately from cosmetic output drift.
