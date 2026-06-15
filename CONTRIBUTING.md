@@ -13,11 +13,19 @@ uv run pytest      # run the test suite
 Common tasks are wrapped in the [`justfile`](justfile):
 
 ```sh
-just test          # run the tests
+just test          # run the full test suite (Python 3.12)
+just test 3.13     # run it on another Python version
 just lint          # ruff check + ruff format --check
 just format        # ruff check --fix + ruff format
 just refresh       # regenerate the reference .tex files (see below)
+just docs          # build the docs (strict, like Read the Docs)
 ```
+
+The suite includes byte-for-byte golden references that target the Python 3.12
+dependency resolution in `uv.lock`, so `just test` defaults to 3.12. Other Python
+versions may resolve a different matplotlib and produce legitimate output
+differences in the golden tests; CI covers them with an output-agnostic
+compatibility matrix (see below).
 
 Linting/formatting is handled entirely by [ruff](https://docs.astral.sh/ruff/),
 also wired up as a pre-commit hook (`pre-commit install`).

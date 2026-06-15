@@ -1,3 +1,6 @@
+# Python version the locked environment and golden references target.
+python_version := "3.12"
+
 # Show available recipes.
 default:
 	@just --list
@@ -6,9 +9,9 @@ default:
 install:
 	uv sync
 
-# Run the test suite (e.g. `just test -k legend`).
-test *args:
-	uv run pytest {{args}}
+# Run the test suite (optionally on another Python version, e.g. `just test 3.13`).
+test python=python_version *args:
+	uv run --python {{python}} --frozen pytest {{args}}
 
 # Check linting and formatting.
 lint:
@@ -22,11 +25,11 @@ format:
 
 # Regenerate the reference .tex files (review the diff afterwards!).
 refresh:
-	uv run python tests/refresh_reference_files.py
+	uv run --frozen python tests/refresh_reference_files.py
 
-# Build the HTML documentation into doc/_build/html.
+# Build the HTML documentation (fails on warnings, like Read the Docs).
 docs:
-	uv run --group docs sphinx-build -b html doc doc/_build/html
+	uv run --group docs sphinx-build -W --keep-going -b html doc doc/_build/html
 
 # Build the sdist and wheel.
 build:
