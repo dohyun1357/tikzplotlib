@@ -23,7 +23,7 @@ def plot():
         s = s.replace("|", r"$|$")
         return s
 
-    for i, (stylename, styleclass) in enumerate(sorted(styles.items())):
+    for i, (stylename, _styleclass) in enumerate(sorted(styles.items())):
         x = 3.2 + (i // nrow) * 4
         y = figheight - 0.7 - i % nrow  # /figheight
         p = mpatches.Circle((x, y), 0.2)

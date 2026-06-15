@@ -3,6 +3,7 @@
 This tests plots a subclass of Collection, which contains enough information
 as a base class to be rendered.
 """
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
