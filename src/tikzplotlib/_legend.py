@@ -35,7 +35,7 @@ def draw_legend(data, obj):
     # In case of given position via bbox_to_anchor parameter the center
     # of legend is changed as follows:
     if _mpl_compat.legend_bbox_to_anchor(obj):
-        bbox_center = obj.get_bbox_to_anchor()._bbox._points[1]
+        bbox_center = _mpl_compat.legend_bbox_anchor_point(obj)
         position = [bbox_center[0], bbox_center[1]]
 
     legend_style = [

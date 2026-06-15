@@ -65,6 +65,36 @@ def is_subplot(ax):
     return get_spec is not None and get_spec() is not None
 
 
+def axis_scale_base(axis):
+    """The base of a logarithmic ``Axis`` scale."""
+    scale = getattr(axis, "_scale", None)
+    if scale is None or not hasattr(scale, "base"):
+        raise AttributeError("axis scale does not expose a logarithmic base")
+    return scale.base
+
+
+def axis_tick_directions(axis):
+    """Return the directions of the major ticks on an ``Axis``."""
+    get_directions = getattr(axis, "get_ticks_direction", None)
+    if get_directions is not None:
+        return list(get_directions())
+    return [tick._tickdir for tick in axis.get_major_ticks()]
+
+
+def axis_grid_visible(axis, which):
+    """Whether major or minor grid lines are enabled on an ``Axis``."""
+    get_ticks = getattr(axis, f"get_{which}_ticks")
+    ticks = get_ticks()
+    if ticks:
+        return any(tick.gridline.get_visible() for tick in ticks)
+
+    tick_kw = getattr(axis, f"_{which}_tick_kw", {})
+    try:
+        return tick_kw["gridOn"]
+    except KeyError:
+        return getattr(axis, f"_gridOn{which.title()}", False)
+
+
 # ---------------------------------------------------------------------------
 # Legend
 # ---------------------------------------------------------------------------
@@ -83,6 +113,15 @@ def legend_ncols(legend):
 def legend_bbox_to_anchor(legend):
     """The raw user-set bbox_to_anchor (``None`` if unset)."""
     return legend._bbox_to_anchor
+
+
+def legend_bbox_anchor_point(legend):
+    """The upper-right point of the raw user-set legend anchor bbox."""
+    bbox = legend_bbox_to_anchor(legend)
+    if bbox is None:
+        return None
+    raw_bbox = getattr(bbox, "_bbox", bbox)
+    return raw_bbox.get_points()[1]
 
 
 def legend_box(legend):
@@ -107,6 +146,14 @@ def line_dash_pattern(line):
         return line._unscaled_dash_pattern  # mpl >= 3.6
     except AttributeError:
         return (line._us_dashOffset, line._us_dashSeq)  # mpl < 3.6
+
+
+def line_drawstyle(line):
+    """The draw style of a Line2D or Line3D."""
+    try:
+        return line.get_drawstyle()
+    except AttributeError:
+        return line._drawstyle
 
 
 def default_dash_pattern(style):
@@ -137,6 +184,17 @@ def cmap_segmentdata(cmap):
 
 
 # ---------------------------------------------------------------------------
+# 3D collections
+# ---------------------------------------------------------------------------
+def collection_offsets3d(collection):
+    """Return the unprojected offsets of a 3D collection."""
+    try:
+        return collection.get_offsets_3d()
+    except AttributeError:
+        return collection._offsets3d
+
+
+# ---------------------------------------------------------------------------
 # Patches
 # ---------------------------------------------------------------------------
 def fancyarrow_posA_posB(patch):
@@ -145,6 +203,14 @@ def fancyarrow_posA_posB(patch):
 
 def patch_path_original(patch):
     return patch._path_original
+
+
+def arrow_styles(arrow_style_cls):
+    """Mapping of registered arrow-style names to their implementation classes."""
+    try:
+        return arrow_style_cls.get_styles()
+    except AttributeError:
+        return arrow_style_cls._style_list
 
 
 def hatch_color(obj):

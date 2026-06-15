@@ -89,12 +89,12 @@ class Axes:
         if obj.get_xscale() == "log":
             self.axis_options.append("xmode=log")
             self.axis_options.append(
-                f"log basis x={{{_try_f2i(obj.xaxis._scale.base)}}}"
+                f"log basis x={{{_try_f2i(_mpl_compat.axis_scale_base(obj.xaxis))}}}"
             )
         if obj.get_yscale() == "log":
             self.axis_options.append("ymode=log")
             self.axis_options.append(
-                f"log basis y={{{_try_f2i(obj.yaxis._scale.base)}}}"
+                f"log basis y={{{_try_f2i(_mpl_compat.axis_scale_base(obj.yaxis))}}}"
             )
 
         # Possible values for get_axisbelow():
@@ -250,14 +250,9 @@ class Axes:
             self.axis_options.append(f"ytick style={{color={ytickcolor}}}")
 
         # Find tick direction
-        # For new matplotlib versions, we could replace the direction getter by
-        # `get_ticks_direction()`, see
-        # <https://github.com/matplotlib/matplotlib/pull/5290>.  Unfortunately, _tickdir
-        # doesn't seem to be quite accurate. See
-        # <https://github.com/matplotlib/matplotlib/issues/5311>.  For now, just take
-        # the first tick direction of each of the axes.
-        x_tick_dirs = [tick._tickdir for tick in obj.xaxis.get_major_ticks()]
-        y_tick_dirs = [tick._tickdir for tick in obj.yaxis.get_major_ticks()]
+        # Take the first tick direction of each axis.
+        x_tick_dirs = _mpl_compat.axis_tick_directions(obj.xaxis)
+        y_tick_dirs = _mpl_compat.axis_tick_directions(obj.yaxis)
         if x_tick_dirs or y_tick_dirs:
             if x_tick_dirs and y_tick_dirs:
                 direction = x_tick_dirs[0] if x_tick_dirs[0] == y_tick_dirs[0] else None
@@ -305,18 +300,10 @@ class Axes:
         # <http://sourceforge.net/p/matplotlib/mailman/message/25169234/> Coordinate of
         # the lines are entirely meaningless, but styles (colors,...) are respected.
 
-        try:
-            # mpl 3.3.3+
-            # <https://github.com/matplotlib/matplotlib/pull/18769>
-            has_major_xgrid = obj.xaxis._major_tick_kw["gridOn"]
-            has_minor_xgrid = obj.xaxis._minor_tick_kw["gridOn"]
-            has_major_ygrid = obj.yaxis._major_tick_kw["gridOn"]
-            has_minor_ygrid = obj.yaxis._minor_tick_kw["gridOn"]
-        except KeyError:
-            has_major_xgrid = obj.xaxis._gridOnMajor
-            has_minor_xgrid = obj.xaxis._gridOnMinor
-            has_major_ygrid = obj.yaxis._gridOnMajor
-            has_minor_ygrid = obj.yaxis._gridOnMinor
+        has_major_xgrid = _mpl_compat.axis_grid_visible(obj.xaxis, "major")
+        has_minor_xgrid = _mpl_compat.axis_grid_visible(obj.xaxis, "minor")
+        has_major_ygrid = _mpl_compat.axis_grid_visible(obj.yaxis, "major")
+        has_minor_ygrid = _mpl_compat.axis_grid_visible(obj.yaxis, "minor")
 
         if has_major_xgrid:
             self.axis_options.append("xmajorgrids")

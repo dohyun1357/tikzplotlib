@@ -4,6 +4,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits import mplot3d
 
+from . import _mpl_compat
+
 STEP_DRAW_STYLES = ["steps-pre", "steps-post", "steps-mid"]
 
 
@@ -298,7 +300,7 @@ def _isStep(linehandle):
     :param linehandle: matplotlib line handle object
     :type linehandle: mpl.lines.Line2D or mpl_toolkits.mplot3d.art3d.Line3D
     """
-    return linehandle._drawstyle in STEP_DRAW_STYLES
+    return _mpl_compat.line_drawstyle(linehandle) in STEP_DRAW_STYLES
 
 
 def _get_visual_limits(fighandle, axhandle):
@@ -576,7 +578,7 @@ def _get_collection_data(collection):
     is3D = _collectionIs3D(collection)
     if is3D:
         # https://stackoverflow.com/questions/51716696/extracting-data-from-a-3d-scatter-plot-in-matplotlib
-        offsets = collection._offsets3d
+        offsets = _mpl_compat.collection_offsets3d(collection)
         xData, yData, zData = (o.data for o in offsets)
         data = _stack_data_3D(xData, yData, zData)
     else:
