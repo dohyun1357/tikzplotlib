@@ -1,29 +1,44 @@
-version := `uv version --short`
-
+# Show available recipes.
 default:
-	@echo "\"just publish\"?"
+	@just --list
 
-publish:
-	@if [ "$(git rev-parse --abbrev-ref HEAD)" != "main" ]; then exit 1; fi
-	gh release create "v{{version}}"
-	rm -rf dist/
-	uv build
-	uv publish
+# Install the project and dev dependencies into .venv.
+install:
+	uv sync
 
-clean:
-	@find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
-	@rm -rf src/*.egg-info/ build/ dist/ .tox/ ./doc/_build/
+# Run the test suite (e.g. `just test -k legend`).
+test *args:
+	uv run pytest {{args}}
 
-format:
-	uv run --group lint ruff check --fix .
-	uv run --group lint ruff format .
-
+# Check linting and formatting.
 lint:
 	uv run --group lint ruff check .
 	uv run --group lint ruff format --check .
 
-test *args:
-	uv run pytest {{args}}
+# Auto-fix lint issues and format the code.
+format:
+	uv run --group lint ruff check --fix .
+	uv run --group lint ruff format .
 
+# Regenerate the reference .tex files (review the diff afterwards!).
 refresh:
 	uv run python tests/refresh_reference_files.py
+
+# Build the HTML documentation into doc/_build/html.
+docs:
+	uv run --group docs sphinx-build -b html doc doc/_build/html
+
+# Build the sdist and wheel.
+build:
+	uv build
+
+# Remove build artifacts and caches.
+clean:
+	rm -rf dist build doc/_build .pytest_cache .ruff_cache
+	find . -type d -name __pycache__ -exec rm -rf {} +
+
+# Tag a release and publish to PyPI (run from main).
+publish: build
+	@test "$(git rev-parse --abbrev-ref HEAD)" = "main" || { echo "publish from main only"; exit 1; }
+	gh release create "v$(uv version --short)"
+	uv publish
