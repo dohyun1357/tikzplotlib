@@ -184,6 +184,12 @@ def _recursive_cleanfigure(obj, target_resolution=600, scale_precision=1.0):
             import warnings
 
             warnings.warn("Cleaning Poly3DCollections is not supported yet.")
+        elif isinstance(child, mpl.contour.ContourSet):
+            # Modern matplotlib represents (3D) contours as a single ContourSet
+            # collection rather than Line3DCollection/Poly3DCollection.
+            import warnings
+
+            warnings.warn("Cleaning ContourSet is not supported yet.")
         else:
             pass
 
@@ -380,11 +386,11 @@ def _replace_data_with_NaN(data, id_replace, is3D):
     else:
         xData, yData = _split_data_2D(data)
 
-    xData[id_replace] = np.NaN
-    yData[id_replace] = np.NaN
+    xData[id_replace] = np.nan
+    yData[id_replace] = np.nan
     if is3D:
         zData = zData.copy()
-        zData[id_replace] = np.NaN
+        zData[id_replace] = np.nan
 
     if is3D:
         new_data = _stack_data_3D(xData, yData, zData)
@@ -504,7 +510,11 @@ def _remove_NaNs(data):
         id_remove = np.arange(len(data))
     else:
         id_remove = np.concatenate(
-            [np.arange(0, id_first), id_remove, np.arange(id_last + 1, len(data))]
+            [
+                np.arange(0, id_first.item()),
+                id_remove,
+                np.arange(id_last.item() + 1, len(data)),
+            ]
         )
     data = np.delete(data, id_remove, axis=0)
     return data

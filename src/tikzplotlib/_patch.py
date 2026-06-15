@@ -1,5 +1,6 @@
 import matplotlib as mpl
 
+from . import _mpl_compat
 from . import _path as mypath
 from ._text import _get_arrow_style
 
@@ -188,8 +189,9 @@ def _draw_circle(data, obj, draw_options):
 def _draw_fancy_arrow(data, obj, draw_options):
     style = _get_arrow_style(obj, data)
     ff = data["float format"]
-    if obj._posA_posB is not None:
-        posA, posB = obj._posA_posB
+    posA_posB = _mpl_compat.fancyarrow_posA_posB(obj)
+    if posA_posB is not None:
+        posA, posB = posA_posB
         do = ",".join(style)
         content = (
             f"\\draw[{do}] (axis cs:{posA[0]:{ff}},{posA[1]:{ff}}) -- "
@@ -197,7 +199,9 @@ def _draw_fancy_arrow(data, obj, draw_options):
         )
     else:
         data, content, _, _ = mypath.draw_path(
-            data, obj._path_original, draw_options=draw_options + style
+            data,
+            _mpl_compat.patch_path_original(obj),
+            draw_options=draw_options + style,
         )
     content += _patch_legend(obj, draw_options, "line legend")
     return data, content

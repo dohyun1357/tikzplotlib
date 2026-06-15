@@ -14,7 +14,6 @@ Requires \usetikzlibrary{patterns}
 # matplotlib.backend_bases.GraphicsContextBase.set/get_hatch_linewidth
 # hatch_density is mentioned in mpl API Changes in 2.0.1
 
-
 import warnings
 
 BAD_MP_HATCH = ["o", "O"]  # Bad hatch/pattern correspondence

@@ -8,11 +8,9 @@ from pathlib import Path
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from . import _axes
+from . import _axes, _legend, _line2d, _patch, _path, _text
 from . import _image as img
-from . import _legend, _line2d, _patch, _path
 from . import _quadmesh as qmsh
-from . import _text
 from .__about__ import __version__
 
 
@@ -30,7 +28,7 @@ def get_tikz_code(
     wrap: bool = True,
     add_axis_environment: bool = True,
     extra_axis_parameters: list | set | None = None,
-    extra_groupstyle_parameters: dict = {},
+    extra_groupstyle_parameters: dict | None = None,
     extra_tikzpicture_parameters: list | set | None = None,
     extra_lines_start: list | set | None = None,
     dpi: int | None = None,
@@ -184,7 +182,7 @@ def get_tikz_code(
         data["extra axis options [base]"] = set(extra_axis_parameters).copy()
     else:
         data["extra axis options [base]"] = set()
-    data["extra groupstyle options [base]"] = extra_groupstyle_parameters
+    data["extra groupstyle options [base]"] = extra_groupstyle_parameters or {}
 
     if dpi:
         data["dpi"] = dpi
@@ -203,7 +201,7 @@ def get_tikz_code(
         raise ValueError(
             f"Unsupported TeX flavor {flavor!r}. "
             f"Please choose from {', '.join(map(repr, Flavors))}"
-        )
+        ) from None
 
     # print message about necessary pgfplot libs to command line
     if show_info:

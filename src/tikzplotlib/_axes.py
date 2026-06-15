@@ -1,15 +1,8 @@
 import matplotlib as mpl
 import numpy as np
-from matplotlib.backends.backend_pgf import (
-    common_texification as mpl_common_texification,
-)
 
-from . import _color
-
-
-def _common_texification(string):
-    # Work around <https://github.com/matplotlib/matplotlib/issues/15493>
-    return mpl_common_texification(string).replace("&", "\\&")
+from . import _color, _mpl_compat
+from ._mpl_compat import texify as _common_texification
 
 
 class Axes:
@@ -28,7 +21,7 @@ class Axes:
         self.subplot_index = 0
         self.is_subplot = False
 
-        if isinstance(obj, mpl.axes.Subplot):
+        if _mpl_compat.is_subplot(obj):
             self._subplot(obj, data)
 
         self.axis_options = []
@@ -590,7 +583,7 @@ def _get_ticks(data, xy, ticks, ticklabels):
 
     pgfplots_ticks = []
     pgfplots_ticklabels = []
-    for tick, ticklabel in zip(ticks, ticklabels):
+    for _, ticklabel in zip(ticks, ticklabels):
         label = ticklabel.get_text()
         if "," in label:
             label = "{" + label + "}"
@@ -666,9 +659,9 @@ def _mpl_cmap2pgf_cmap(cmap, data):
     if isinstance(cmap, mpl.colors.LinearSegmentedColormap):
         return _handle_linear_segmented_color_map(cmap, data)
 
-    assert isinstance(
-        cmap, mpl.colors.ListedColormap
-    ), "Only LinearSegmentedColormap and ListedColormap are supported"
+    assert isinstance(cmap, mpl.colors.ListedColormap), (
+        "Only LinearSegmentedColormap and ListedColormap are supported"
+    )
     return _handle_listed_color_map(cmap, data)
 
 
@@ -686,7 +679,7 @@ def _handle_linear_segmented_color_map(cmap, data):
     # elements in each row in the cdict entry for a given color as (x, y0, y1).  Then
     # for values of x between x[i] and x[i+1] the color value is interpolated between
     # y1[i] and y0[i+1].
-    segdata = cmap._segmentdata
+    segdata = _mpl_compat.cmap_segmentdata(cmap)
     red = segdata["red"]
     green = segdata["green"]
     blue = segdata["blue"]

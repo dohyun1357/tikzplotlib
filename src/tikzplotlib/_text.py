@@ -261,16 +261,18 @@ def _bbox(bbox, data, properties, scaling):
     # Rounded boxes
     if isinstance(bbox_style, mpl.patches.BoxStyle.Round):
         properties.append("rounded corners")
-    elif isinstance(bbox_style, mpl.patches.BoxStyle.RArrow):
+    # NB: in modern matplotlib LArrow and DArrow subclass RArrow, so they must
+    # be checked *before* RArrow.
+    elif isinstance(bbox_style, mpl.patches.BoxStyle.DArrow):
         data["tikz libs"].add("shapes.arrows")
-        properties.append("single arrow")
+        properties.append("double arrow")
     elif isinstance(bbox_style, mpl.patches.BoxStyle.LArrow):
         data["tikz libs"].add("shapes.arrows")
         properties.append("single arrow")
         properties.append("shape border rotate=180")
-    elif isinstance(bbox_style, mpl.patches.BoxStyle.DArrow):
+    elif isinstance(bbox_style, mpl.patches.BoxStyle.RArrow):
         data["tikz libs"].add("shapes.arrows")
-        properties.append("double arrow")
+        properties.append("single arrow")
     elif isinstance(bbox_style, mpl.patches.BoxStyle.Circle):
         properties.append("circle")
     elif isinstance(bbox_style, mpl.patches.BoxStyle.Roundtooth):

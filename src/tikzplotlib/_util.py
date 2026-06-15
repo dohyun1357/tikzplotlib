@@ -1,6 +1,8 @@
 import matplotlib.transforms
 import numpy as np
 
+from . import _mpl_compat
+
 
 def has_legend(axes):
     return axes.get_legend() is not None
@@ -12,7 +14,7 @@ def get_legend_text(obj):
     if leg is None:
         return None
 
-    keys = [h.get_label() for h in leg.legendHandles if h is not None]
+    keys = [h.get_label() for h in _mpl_compat.legend_handles(leg) if h is not None]
     values = [t.get_text() for t in leg.texts]
 
     label = obj.get_label()
