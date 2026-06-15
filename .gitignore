@@ -12,6 +12,7 @@ build/
 .ruff_cache/
 .tox/
 .venv/
+.venv-*/
 mytikz.tex
 test.tex
 plot.tex
