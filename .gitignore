@@ -9,6 +9,9 @@ build/
 .cache/
 *.egg-info/
 .pytest_cache/
+.ruff_cache/
 .tox/
+.venv/
 mytikz.tex
 test.tex
+plot.tex

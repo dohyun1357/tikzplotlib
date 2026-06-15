@@ -2,9 +2,6 @@
 requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
-[tool.isort]
-profile = "black"
-
 [project]
 name = "tikzplotlib"
 authors = [{name = "Nico Schlömer", email = "nico.schloemer@gmail.com"}]
@@ -18,24 +15,56 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Multimedia :: Graphics :: Graphics Conversion",
   "Topic :: Scientific/Engineering :: Visualization",
 ]
 keywords = ["latex", "tikz", "matplotlib", "graphics"]
-dynamic = ["version"]
-requires-python = ">=3.7"
+version = "0.10.1"
+requires-python = ">=3.9"
 dependencies = [
-  "matplotlib >= 1.4.0",
-  "numpy",
+  "matplotlib >= 3.8",
+  "numpy >= 1.23",
   "Pillow",
-  "webcolors",
+  "webcolors >= 1.12",
 ]
 
 [project.urls]
-Code = "https://github.com/nschloe/tikzplotlib"
-Issues = "https://github.com/nschloe/tikzplotlib/issues"
-Funding = "https://github.com/sponsors/nschloe"
+Repository = "https://github.com/dohyun1357/tikzplotlib"
+Issues = "https://github.com/dohyun1357/tikzplotlib/issues"
+Documentation = "https://tikzplotlib.readthedocs.io/"
+
+[dependency-groups]
+dev = [
+  "pandas",
+  "pytest",
+  "pytest-cov",
+  "pytest-randomly",
+  "sybil",
+]
+lint = [
+  "ruff",
+]
+docs = [
+  "sphinx",
+  "furo",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I isort, B bugbear, UP pyupgrade,
+# NPY numpy (incl. the numpy-2.0 deprecation rules, NPY201)
+select = ["E", "F", "W", "I", "B", "UP", "NPY"]
+ignore = [
+  "E501",   # line length is enforced by the formatter, not the linter
+  "E741",   # ambiguous variable names (l, I, O) — pre-existing, low value
+  "B028",   # no explicit stacklevel in warnings.warn — noisy
+  "NPY002", # legacy np.random is intentional in seeded tests (stable output)
+]

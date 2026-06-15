@@ -26,10 +26,33 @@ builtin_colors = {
 }
 
 
+def _css3_hex_to_names():
+    """Map CSS3 hex values to color names.
+
+    webcolors >= 1.12 removed the ``CSS3_HEX_TO_NAMES`` constant in favor of
+    ``names()`` / ``name_to_hex()``; rebuild the equivalent mapping, falling
+    back to the constant on older webcolors.
+
+    ``names()`` is sorted alphabetically, so for hexes with several names (e.g.
+    "gray"/"grey") we keep the first one with ``setdefault``. This deterministic
+    choice matches the historical "gray" spelling.
+    """
+    try:
+        return webcolors.CSS3_HEX_TO_NAMES
+    except AttributeError:
+        mapping = {}
+        for name in webcolors.names(webcolors.CSS3):
+            mapping.setdefault(webcolors.name_to_hex(name, spec=webcolors.CSS3), name)
+        return mapping
+
+
+_CSS3_HEX_TO_NAMES = _css3_hex_to_names()
+
+
 def _get_closest_colour_name(rgb):
     match = None
     mindiff = 1.0e15
-    for h, name in webcolors.CSS3_HEX_TO_NAMES.items():
+    for h, name in _CSS3_HEX_TO_NAMES.items():
         r = int(h[1:3], 16)
         g = int(h[3:5], 16)
         b = int(h[5:7], 16)

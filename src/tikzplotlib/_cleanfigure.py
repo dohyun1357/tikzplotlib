@@ -4,86 +4,71 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits import mplot3d
 
+from . import _mpl_compat
+
 STEP_DRAW_STYLES = ["steps-pre", "steps-post", "steps-mid"]
 
 
 def clean_figure(fig=None, target_resolution: int = 600, scale_precision: float = 1.0):
-    """Cleans figure as a preparation for tikz export.
+    """Clean a figure in preparation for TikZ export.
+
     This will minimize the number of points required for the tikz figure.
-    If the figure has subplots, it will recursively clean then up.
+    If the figure has subplots, it will recursively clean them up.
 
     Note that this function modifies the figure directly (impure function).
 
-    :param fig: Matplotlib figure handle (Default value = None)
-
-    :param target_resolution: target resolution of final figure in PPI.
-                              If a scalar integer is provided, it is assumed to be
-                              square in both axis.  If a list or an np.array is
-                              provided, it is interpreted as [H, W].
-                              By default 600
+    :param fig: Matplotlib figure handle. Defaults to the current figure.
+    :type fig: matplotlib.figure.Figure or None
+    :param target_resolution: Target resolution of the final figure in PPI.
+        A scalar integer is used for both axes. A list or NumPy array is
+        interpreted as ``[height, width]``. Defaults to 600.
     :type target_resolution: int, list or np.array, optional
+    :param scale_precision: Scalar value indicating precision when scaling down.
+        Defaults to 1.
+    :type scale_precision: float, optional
 
-    :param scalePrecision: scalar value indicating precision when scaling down.
-                           By default 1
-    :type scalePrecision: float, optional
+    Example usage for a 2D line plot:
 
-    Examples
-    --------
+    .. code-block:: python
 
-        1. 2D lineplot
-        ```python
-            from tikzplotlib import get_tikz_code, cleanfigure
+        import matplotlib.pyplot as plt
+        import numpy as np
 
-            x = np.linspace(1, 100, 20)
-            y = np.linspace(1, 100, 20)
+        from tikzplotlib import clean_figure, get_tikz_code
 
-            with plt.rc_context(rc=RC_PARAMS):
-                fig, ax = plt.subplots(1, 1, figsize=(5, 5))
-                ax.plot(x, y)
-                ax.set_ylim([20, 80])
-                ax.set_xlim([20, 80])
-                raw = get_tikz_code()
+        x = np.linspace(1, 100, 20)
+        y = np.linspace(1, 100, 20)
 
-                clean_figure(fig)
-                clean = get_tikz_code()
+        fig, ax = plt.subplots(figsize=(5, 5))
+        ax.plot(x, y)
+        ax.set_ylim([20, 80])
+        ax.set_xlim([20, 80])
+        raw = get_tikz_code(fig)
 
-                # Use number of lines to test if it worked.
-                # the baseline (raw) should have 20 points
-                # the clean version (clean) should have 2 points
-                # the difference in line numbers should therefore be 2
-                numLinesRaw = raw.count("\n")
-                numLinesClean = clean.count("\n")
-                print("number of tikz lines saved", numLinesRaw - numLinesClean)
-        ```
+        clean_figure(fig)
+        clean = get_tikz_code(fig)
+        print("number of TikZ lines saved", raw.count("\\n") - clean.count("\\n"))
 
-        2. 3D lineplot
-        ```python
-            from tikzplotlib import get_tikz_code, cleanfigure
+    Clean a 3D line plot:
 
-            theta = np.linspace(-4 * np.pi, 4 * np.pi, 100)
-            z = np.linspace(-2, 2, 100)
-            r = z ** 2 + 1
-            x = r * np.sin(theta)
-            y = r * np.cos(theta)
+    .. code-block:: python
 
-            with plt.rc_context(rc=RC_PARAMS):
-                fig = plt.figure()
-                ax = fig.add_subplot(111, projection="3d")
-                ax.plot(x, y, z)
-                ax.set_xlim([-2, 2])
-                ax.set_ylim([-2, 2])
-                ax.set_zlim([-2, 2])
-                ax.view_init(30, 30)
-                raw = get_tikz_code(fig)
+        theta = np.linspace(-4 * np.pi, 4 * np.pi, 100)
+        z = np.linspace(-2, 2, 100)
+        r = z**2 + 1
+        x = r * np.sin(theta)
+        y = r * np.cos(theta)
 
-                clean_figure(fig)
-                clean = get_tikz_code()
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+        ax.plot(x, y, z)
+        ax.set_xlim([-2, 2])
+        ax.set_ylim([-2, 2])
+        ax.set_zlim([-2, 2])
+        ax.view_init(30, 30)
 
-                # Use number of lines to test if it worked.
-                numLinesRaw = raw.count("\n")
-                numLinesClean = clean.count("\n")
-                assert numLinesRaw - numLinesClean == 14
-        ```
+        clean_figure(fig)
+        clean = get_tikz_code(fig)
     """
     if fig is None:
         fig = plt.gcf()
@@ -184,6 +169,12 @@ def _recursive_cleanfigure(obj, target_resolution=600, scale_precision=1.0):
             import warnings
 
             warnings.warn("Cleaning Poly3DCollections is not supported yet.")
+        elif isinstance(child, mpl.contour.ContourSet):
+            # Modern matplotlib represents (3D) contours as a single ContourSet
+            # collection rather than Line3DCollection/Poly3DCollection.
+            import warnings
+
+            warnings.warn("Cleaning ContourSet is not supported yet.")
         else:
             pass
 
@@ -309,7 +300,7 @@ def _isStep(linehandle):
     :param linehandle: matplotlib line handle object
     :type linehandle: mpl.lines.Line2D or mpl_toolkits.mplot3d.art3d.Line3D
     """
-    return linehandle._drawstyle in STEP_DRAW_STYLES
+    return _mpl_compat.line_drawstyle(linehandle) in STEP_DRAW_STYLES
 
 
 def _get_visual_limits(fighandle, axhandle):
@@ -380,11 +371,11 @@ def _replace_data_with_NaN(data, id_replace, is3D):
     else:
         xData, yData = _split_data_2D(data)
 
-    xData[id_replace] = np.NaN
-    yData[id_replace] = np.NaN
+    xData[id_replace] = np.nan
+    yData[id_replace] = np.nan
     if is3D:
         zData = zData.copy()
-        zData[id_replace] = np.NaN
+        zData[id_replace] = np.nan
 
     if is3D:
         new_data = _stack_data_3D(xData, yData, zData)
@@ -504,7 +495,11 @@ def _remove_NaNs(data):
         id_remove = np.arange(len(data))
     else:
         id_remove = np.concatenate(
-            [np.arange(0, id_first), id_remove, np.arange(id_last + 1, len(data))]
+            [
+                np.arange(0, id_first.item()),
+                id_remove,
+                np.arange(id_last.item() + 1, len(data)),
+            ]
         )
     data = np.delete(data, id_remove, axis=0)
     return data
@@ -583,7 +578,7 @@ def _get_collection_data(collection):
     is3D = _collectionIs3D(collection)
     if is3D:
         # https://stackoverflow.com/questions/51716696/extracting-data-from-a-3d-scatter-plot-in-matplotlib
-        offsets = collection._offsets3d
+        offsets = _mpl_compat.collection_offsets3d(collection)
         xData, yData, zData = (o.data for o in offsets)
         data = _stack_data_3D(xData, yData, zData)
     else:

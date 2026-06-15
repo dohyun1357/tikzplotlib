@@ -15,7 +15,7 @@ def plot():
         axes[k].plot(t2, np.sin(2 * np.pi * t2), "--go", t1, np.log(1 + t1), ".")
         axes[k].plot(t2, np.exp(-t2) * np.sin(2 * np.pi * t2), "rs-.")
 
-        axes[k].legend((l1,), ("loc %d" % loc,), loc=loc)
+        axes[k].legend((l1,), (f"loc {loc}",), loc=loc)
     return fig
 
 

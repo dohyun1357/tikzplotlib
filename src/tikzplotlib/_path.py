@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib.dates import DateConverter, num2date
 from matplotlib.markers import MarkerStyle
 
-from . import _color, _files
+from . import _color, _files, _mpl_compat
 from ._axes import _mpl_cmap2pgf_cmap
 from ._hatches import _mpl_hatch2pgfp_pattern
 from ._markers import _mpl_marker2pgfp_marker
@@ -22,7 +22,9 @@ def draw_path(data, path, draw_options=None, simplify=None):
     ):
         return data, "", None, False
 
-    x_is_date = isinstance(data["current mpl axes obj"].xaxis.converter, DateConverter)
+    x_is_date = isinstance(
+        _mpl_compat.axis_converter(data["current mpl axes obj"].xaxis), DateConverter
+    )
     nodes = []
     ff = data["float format"]
     xformat = "" if x_is_date else ff
@@ -388,7 +390,7 @@ def get_draw_options(data, obj, ec, fc, ls, lw, hatch=None):
         # There exist an obj.get_hatch_color() method in the mpl API,
         # but it seems to be unused
         try:
-            hc = obj._hatch_color
+            hc = _mpl_compat.hatch_color(obj)
         except AttributeError:  # Fallback to edge color
             if ec is None or ec_rgba[3] == 0.0:
                 # Assuming that a hatch marker indicates that hatches are wanted, also
@@ -466,11 +468,12 @@ def mpl_linestyle2pgfplots_linestyle(data, line_style, line=None):
         # see matplotlib.lines.Line2D.set_dashes
 
         # get defaults
-        default_dashOffset, default_dashSeq = mpl.lines._get_dash_pattern(line_style)
+        default_dashOffset, default_dashSeq = _mpl_compat.default_dash_pattern(
+            line_style
+        )
 
         # get dash format of line under test
-        dashSeq = line._us_dashSeq
-        dashOffset = line._us_dashOffset
+        dashOffset, dashSeq = _mpl_compat.line_dash_pattern(line)
 
         lst = list()
         if dashSeq != default_dashSeq:

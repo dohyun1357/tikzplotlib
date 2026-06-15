@@ -7,34 +7,70 @@ on:
   pull_request:
     branches:
       - main
+  schedule:
+    # Weekly run (Mondays 06:00 UTC) so the latest-deps smoke job catches new
+    # matplotlib/numpy releases that break tikzplotlib before users hit them.
+    - cron: "0 6 * * 1"
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repo
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-      - name: Run pre-commit
-        uses: pre-commit/action@v2.0.3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - uses: pre-commit/action@v3.0.1
 
-  build:
+  golden:
+    # Golden references are generated with the Python 3.12 lock resolution.
+    # Running them under other Python versions can select a different locked
+    # matplotlib version and produce legitimate output differences.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Run golden-output tests against the canonical locked dependencies
+        run: uv run --frozen pytest --cov tikzplotlib --cov-report xml --cov-report term
+      - uses: codecov/codecov-action@v4
+
+  compatibility:
+    # Exercise public workflows without comparing output that legitimately
+    # differs between the matplotlib versions selected by the lockfile.
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/checkout@v2
       # - name: Install system dependencies
       #   run: sudo apt-get install -y texlive-latex-base texlive-latex-extra context python3-tk
-      - name: Test with tox
-        run: |
-          pip install tox
-          tox -- --cov tikzplotlib --cov-report xml --cov-report term
-      - uses: codecov/codecov-action@v1
-        if: ${{ matrix.python-version == '3.10' && matrix.os == 'ubuntu-latest' }}
+      - name: Run output-agnostic tests against the locked dependencies
+        run: >-
+          uv run --frozen pytest -v
+          README.md
+          tests/test_cleanfigure.py
+          tests/test_deterministic_output.py
+          tests/test_mpl_compat.py
+          tests/test_rotated_labels.py
+
+  smoke-latest:
+    # Early-warning job: run the (output-agnostic) README examples against the
+    # newest matplotlib/numpy, ignoring the lockfile. This surfaces upstream API
+    # breakage without the cosmetic-diff noise of the exact-match golden tests.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - name: Smoke-test the documented examples against the latest dependencies
+        run: uv run --upgrade pytest README.md -v

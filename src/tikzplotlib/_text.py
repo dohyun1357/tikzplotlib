@@ -1,7 +1,7 @@
 import matplotlib as mpl
 from matplotlib.patches import ArrowStyle
 
-from . import _color
+from . import _color, _mpl_compat
 
 
 def draw_text(data, obj):
@@ -186,14 +186,15 @@ def _get_arrow_style(obj, data):
     }
     style_cls = type(obj.get_arrowstyle())
 
-    # Sometimes, mpl adds new arrow styles to the ArrowStyle._style_list dictionary.
+    # Sometimes, mpl adds new arrow styles to the registered styles dictionary.
     # To support multiple mpl versions, check in a loop instead of a dictionary lookup.
+    registered_styles = _mpl_compat.arrow_styles(ArrowStyle)
     latex_style = None
     for key, value in arrow_translate.items():
-        if key not in ArrowStyle._style_list:
+        if key not in registered_styles:
             continue
 
-        if ArrowStyle._style_list[key] == style_cls:
+        if registered_styles[key] == style_cls:
             latex_style = value
             break
 
@@ -261,16 +262,18 @@ def _bbox(bbox, data, properties, scaling):
     # Rounded boxes
     if isinstance(bbox_style, mpl.patches.BoxStyle.Round):
         properties.append("rounded corners")
-    elif isinstance(bbox_style, mpl.patches.BoxStyle.RArrow):
+    # NB: in modern matplotlib LArrow and DArrow subclass RArrow, so they must
+    # be checked *before* RArrow.
+    elif isinstance(bbox_style, mpl.patches.BoxStyle.DArrow):
         data["tikz libs"].add("shapes.arrows")
-        properties.append("single arrow")
+        properties.append("double arrow")
     elif isinstance(bbox_style, mpl.patches.BoxStyle.LArrow):
         data["tikz libs"].add("shapes.arrows")
         properties.append("single arrow")
         properties.append("shape border rotate=180")
-    elif isinstance(bbox_style, mpl.patches.BoxStyle.DArrow):
+    elif isinstance(bbox_style, mpl.patches.BoxStyle.RArrow):
         data["tikz libs"].add("shapes.arrows")
-        properties.append("double arrow")
+        properties.append("single arrow")
     elif isinstance(bbox_style, mpl.patches.BoxStyle.Circle):
         properties.append("circle")
     elif isinstance(bbox_style, mpl.patches.BoxStyle.Roundtooth):
