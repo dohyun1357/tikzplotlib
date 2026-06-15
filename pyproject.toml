@@ -27,10 +27,10 @@ keywords = ["latex", "tikz", "matplotlib", "graphics"]
 version = "0.10.1"
 requires-python = ">=3.9"
 dependencies = [
-  "matplotlib >= 1.4.0",
-  "numpy",
+  "matplotlib >= 3.8",
+  "numpy >= 1.23",
   "Pillow",
-  "webcolors",
+  "webcolors >= 1.12",
 ]
 
 [project.urls]
@@ -43,15 +43,24 @@ dev = [
   "pandas",
   "pytest",
   "pytest-cov",
-  "pytest-codeblocks",
   "pytest-randomly",
+  "sybil",
 ]
 lint = [
-  "black",
-  "blacken-docs",
-  "flake8",
-  "isort",
+  "ruff",
 ]
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I isort, B bugbear, UP pyupgrade,
+# NPY numpy (incl. the numpy-2.0 deprecation rules, NPY201)
+select = ["E", "F", "W", "I", "B", "UP", "NPY"]
+ignore = [
+  "E501",   # line length is enforced by the formatter, not the linter
+  "E741",   # ambiguous variable names (l, I, O) — pre-existing, low value
+  "B028",   # no explicit stacklevel in warnings.warn — noisy
+  "NPY002", # legacy np.random is intentional in seeded tests (stable output)
+]

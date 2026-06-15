@@ -15,13 +15,15 @@ clean:
 	@rm -rf src/*.egg-info/ build/ dist/ .tox/ ./doc/_build/
 
 format:
-	uv run --group lint isort .
-	uv run --group lint black .
-	uv run --group lint blacken-docs README.md
+	uv run --group lint ruff check --fix .
+	uv run --group lint ruff format .
 
 lint:
-	uv run --group lint black --check .
-	uv run --group lint flake8 .
+	uv run --group lint ruff check .
+	uv run --group lint ruff format --check .
 
 test *args:
-	uv run pytest {{args}} --codeblocks
+	uv run pytest {{args}}
+
+refresh:
+	uv run python tests/refresh_reference_files.py
