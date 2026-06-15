@@ -10,9 +10,9 @@ install:
 	uv sync
 
 # Run the test suite (optionally on another Python version, e.g. `just test 3.13`).
-# Non-default versions use their own .venv-<version> so the main .venv is left intact.
+# Other versions run in a throwaway --isolated env, so the main .venv is untouched.
 test python=python_version *args:
-	UV_PROJECT_ENVIRONMENT="{{ if python == python_version { '.venv' } else { '.venv-' + python } }}" uv run --python {{python}} --frozen pytest {{args}}
+	{{ if python == python_version { "uv run" } else { "uv run --isolated --python " + python } }} --frozen pytest {{args}}
 
 # Check linting and formatting.
 lint:
@@ -36,9 +36,9 @@ docs:
 build:
 	uv build
 
-# Remove build artifacts, caches, and per-version test environments.
+# Remove build artifacts and caches.
 clean:
-	rm -rf dist build doc/_build .pytest_cache .ruff_cache .venv-*
+	rm -rf dist build doc/_build .pytest_cache .ruff_cache
 	find . -type d -name __pycache__ -exec rm -rf {} +
 
 # Tag a release and publish to PyPI (run from main).
