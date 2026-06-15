@@ -15,6 +15,7 @@ Common tasks are wrapped in the [`justfile`](justfile):
 ```sh
 just test          # run the full test suite (Python 3.12)
 just test 3.13     # run it on another Python version
+just test-all      # run the whole version matrix (like CI)
 just lint          # ruff check + ruff format --check
 just format        # ruff check --fix + ruff format
 just refresh       # regenerate the reference .tex files (see below)

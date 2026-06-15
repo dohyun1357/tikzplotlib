@@ -1,5 +1,10 @@
-# Python version the locked environment and golden references target.
+# Canonical Python version (matches uv.lock's golden-reference resolution).
 python_version := "3.12"
+# Every supported version, and the subset that resolves the golden matplotlib.
+all_versions := "3.9 3.10 3.11 3.12 3.13"
+golden_versions := "3.11 3.12 3.13"
+# Output-agnostic tests, safe to run where the locked matplotlib differs.
+compat_tests := "README.md tests/test_cleanfigure.py tests/test_deterministic_output.py tests/test_mpl_compat.py tests/test_rotated_labels.py"
 
 # Show available recipes.
 default:
@@ -9,10 +14,25 @@ default:
 install:
 	uv sync
 
-# Run the test suite (optionally on another Python version, e.g. `just test 3.13`).
 # Other versions run in a throwaway --isolated env, so the main .venv is untouched.
+# Run the test suite, optionally on another Python version (e.g. `just test 3.13`).
 test python=python_version *args:
 	{{ if python == python_version { "uv run" } else { "uv run --isolated --python " + python } }} --frozen pytest {{args}}
+
+# Full suite where the locked matplotlib matches the golden refs; compat subset elsewhere.
+# Run the whole version matrix, like CI.
+test-all *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	for v in {{all_versions}}; do
+	    echo "==> Python $v"
+	    case " {{golden_versions}} " in *" $v "*) tests="" ;; *) tests="{{compat_tests}}" ;; esac
+	    if [ "$v" = "{{python_version}}" ]; then
+	        uv run --frozen pytest $tests {{args}}
+	    else
+	        uv run --isolated --python "$v" --frozen pytest $tests {{args}}
+	    fi
+	done
 
 # Check linting and formatting.
 lint:
