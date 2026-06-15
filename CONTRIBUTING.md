@@ -1,0 +1,65 @@
+# Contributing
+
+This project uses [uv](https://docs.astral.sh/uv/) for environment and
+dependency management.
+
+## Development setup
+
+```sh
+uv sync            # create .venv and install the project + dev dependencies
+uv run pytest      # run the test suite
+```
+
+Common tasks are wrapped in the [`justfile`](justfile):
+
+```sh
+just test          # run the tests
+just lint          # ruff check + ruff format --check
+just format        # ruff check --fix + ruff format
+just refresh       # regenerate the reference .tex files (see below)
+```
+
+Linting/formatting is handled entirely by [ruff](https://docs.astral.sh/ruff/),
+also wired up as a pre-commit hook (`pre-commit install`).
+
+## Isolating matplotlib's volatile API
+
+matplotlib regularly renames or removes the private attributes/helpers this
+project relies on. **Keep all such version-sensitive access in
+[`src/tikzplotlib/_mpl_compat.py`](src/tikzplotlib/_mpl_compat.py)** behind a
+small accessor that prefers a public API and falls back to the private one. That
+way a future matplotlib change only touches one file. Avoid reaching into
+matplotlib internals (`obj._something`) directly from the rest of the code.
+
+## The golden reference tests
+
+Most tests compare generated TikZ output byte-for-byte against the
+`tests/*_reference.tex` files. Those references correspond to the matplotlib
+version pinned in `uv.lock`, so CI is reproducible and the references only change
+deliberately.
+
+When you intentionally change the output (or bump matplotlib):
+
+```sh
+uv lock --upgrade-package matplotlib   # (only when bumping matplotlib)
+uv sync
+just refresh                           # regenerate the references
+git diff tests/                        # review every change!
+```
+
+Review the diff carefully: each change should be an explainable consequence of
+your change or of a matplotlib default change — **not** a malformed-TikZ
+regression. `refresh` skips a few tests with non-standard structure
+(`test_rotated_labels`, `test_deterministic_output`, `test_cleanfigure`,
+`test_context`); update those by hand if needed.
+
+Prefer assertions that are robust to matplotlib's formatting (e.g. asserting the
+number of points removed by `clean_figure`, not absolute line counts).
+
+## CI
+
+- The **build** matrix runs the full suite against the locked dependencies on
+  Python 3.9–3.13 across Linux/macOS/Windows.
+- The **smoke-latest** job (also weekly via cron) runs the output-agnostic
+  README examples against the newest matplotlib/numpy to catch upstream API
+  breakage early, separately from cosmetic output drift.
